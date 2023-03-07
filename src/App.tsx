@@ -1,26 +1,59 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import Header from "./components/Header";
+import GlobalStyle from "./styled/global";
+import { ThemeProvider } from "styled-components";
+import defaultTheme from "./styled/theme";
+import { createContext, useEffect, useState } from "react";
+import AppConfig from "./models/AppConfig";
+import ExchangeRatesService from "./services/ExchangeRates";
+import MainScene from "./scenes/Main";
+import ExchangeRate from "./models/ExchangeRate";
 
-function App() {
+const defaultAppConfig: AppConfig = {
+  baseCurrency: { code: "UAH" },
+  availableCurrencies: [
+    {
+      code: "USD",
+    },
+    {
+      code: "EUR",
+    },
+  ],
+};
+
+export const AppConfigContext = createContext<AppConfig>(defaultAppConfig);
+export const ExchangeRatesContext = createContext<ExchangeRate[]>([]);
+
+const App = () => {
+  const [exchangeRates, setExchangeRates] = useState<ExchangeRate[]>([]);
+
+  const loadExchangeRates = async () => {
+    const exchangeService = new ExchangeRatesService();
+    const rates = await exchangeService.getExchangeRatesForToday(
+      defaultAppConfig.baseCurrency,
+      defaultAppConfig.availableCurrencies,
+    );
+    setExchangeRates(rates);
+  };
+
+  useEffect(() => {
+    loadExchangeRates();
+  }, []);
+
+  if (!exchangeRates.length) {
+    return <>Loading...</>;
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <AppConfigContext.Provider value={defaultAppConfig}>
+      <ThemeProvider theme={defaultTheme}>
+        <ExchangeRatesContext.Provider value={exchangeRates}>
+          <Header />
+          <MainScene />
+        </ExchangeRatesContext.Provider>
+        <GlobalStyle />
+      </ThemeProvider>
+    </AppConfigContext.Provider>
   );
-}
+};
 
 export default App;
