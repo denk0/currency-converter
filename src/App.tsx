@@ -7,6 +7,7 @@ import AppConfig from "./models/AppConfig";
 import ExchangeRatesService from "./services/ExchangeRates";
 import MainScene from "./scenes/Main";
 import ExchangeRate from "./models/ExchangeRate";
+import Preloader from "./components/Preloader";
 
 const defaultAppConfig: AppConfig = {
   baseCurrency: { code: "UAH" },
@@ -39,16 +40,17 @@ const App = () => {
     loadExchangeRates();
   }, []);
 
-  if (!exchangeRates.length) {
-    return <>Loading...</>;
-  }
-
   return (
     <AppConfigContext.Provider value={defaultAppConfig}>
       <ThemeProvider theme={defaultTheme}>
         <ExchangeRatesContext.Provider value={exchangeRates}>
-          <Header />
-          <MainScene />
+          {!exchangeRates.length && <Preloader />}
+          {!!exchangeRates.length && (
+            <>
+              <Header />
+              <MainScene />
+            </>
+          )}
         </ExchangeRatesContext.Provider>
         <GlobalStyle />
       </ThemeProvider>
